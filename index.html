@@ -259,7 +259,7 @@ button{transition:transform .15s,background-color .2s,opacity .2s}button:active{
   .request-secondary { color:#e8e4d8;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.14); }
   #incoming-game-modal:not(.hidden) { display:flex; }
   .card-trump-crown {
-    position:absolute;top:-7px;left:-7px;z-index:5;width:21px;height:21px;display:grid;place-items:center;
+    position:absolute;top:-2px;left:-2px;z-index:5;width:21px;height:21px;display:grid;place-items:center;
     border-radius:50%;background:linear-gradient(135deg,#fff0b8,#d7a746);color:#493313;
     font-size:12px;line-height:1;border:1px solid #fff5d5;box-shadow:0 3px 8px rgba(0,0,0,.35)
   }
@@ -407,7 +407,7 @@ button{transition:transform .15s,background-color .2s,opacity .2s}button:active{
   /* ===== Mobile: Chat-Button mittig rechts ===== */
   @media (max-width: 640px) {
     #btn-open-chat {
-      top: 22vh !important;
+      top: 14vh !important;
       bottom: auto !important;
       transform: none !important;
       right: 6px !important;
@@ -591,11 +591,13 @@ button{transition:transform .15s,background-color .2s,opacity .2s}button:active{
       z-index: 3;
     }
   }
-  /* Trumpfkarte im Setup: auf Mobile winzig, auf Desktop normal */
+  /* Trumpfkarte: gleiche Grösse wie Handkarten im Setup (68px) und im Spiel (82px) */
   .trump-slot-card { width: 100%; height: 100%; }
   @media (max-width: 640px) {
-    .trump-slot-card { width: 28px !important; height: 44px !important; }
-    .trump-slot-card .pcard { width: 28px !important; height: 44px !important; min-width: 0 !important; }
+    body:not(.in-play) .trump-slot-card { width: 68px !important; height: 106px !important; }
+    body:not(.in-play) .trump-slot-card .pcard { width: 68px !important; height: 106px !important; min-width: 0 !important; }
+    body.in-play .trump-slot-card { width: 82px !important; height: 128px !important; }
+    body.in-play .trump-slot-card .pcard { width: 82px !important; height: 128px !important; min-width: 0 !important; }
   }</style>
 
 
@@ -685,7 +687,7 @@ button{transition:transform .15s,background-color .2s,opacity .2s}button:active{
         </div>
 
         <div class="grid grid-cols-2 gap-2.5">
-          <button type="button" onclick="selectUser('Jan')" id="btn-user-jan" class="p-2.5 sm:p-3 rounded-2xl border-2 border-amber-400 bg-amber-500/20 text-left transition-all flex items-center gap-2.5">
+          <button type="button" onclick="selectUser('Jan')" id="btn-user-jan" class="p-2.5 sm:p-3 rounded-2xl border-2 border-white/10 bg-white/5 hover:bg-white/10 text-left transition-all flex items-center gap-2.5">
             <span id="login-avatar-jan" class="text-3xl">👱‍♂️</span>
             <div class="overflow-hidden">
               <div id="login-name-jan" class="font-bold text-white text-sm sm:text-base truncate">Jan</div>
@@ -693,7 +695,7 @@ button{transition:transform .15s,background-color .2s,opacity .2s}button:active{
             </div>
           </button>
 
-          <button type="button" onclick="selectUser('Rita')" id="btn-user-rita" class="p-2.5 sm:p-3 rounded-2xl border-2 border-white/10 bg-white/5 hover:bg-white/10 text-left transition-all flex items-center gap-2.5">
+          <button type="button" onclick="selectUser('Rita')" id="btn-user-rita" class="p-2.5 sm:p-3 rounded-2xl border-2 border-amber-400 bg-amber-500/20 text-left transition-all flex items-center gap-2.5">
             <span id="login-avatar-rita" class="text-3xl">👩</span>
             <div class="overflow-hidden">
               <div id="login-name-rita" class="font-bold text-white text-sm sm:text-base truncate">Rita</div>
@@ -841,15 +843,15 @@ button{transition:transform .15s,background-color .2s,opacity .2s}button:active{
       
       <!-- DEZENTER TRUMPF- & ZIEL-INDIKATOR NEBEN/OBERHALB DES TEPPICHS -->
       <div id="discreet-trump-pill" class="hidden self-end mb-1 mr-4 sm:mr-8 px-3 py-0.5 rounded-full apple-glass border border-white/10 flex items-center gap-2 text-xs shadow-lg animate-fade-in">
+        <div class="flex items-center gap-1 font-bold">
+          <span class="text-slate-400 text-[9px] uppercase font-semibold">Ziel</span>
+          <span id="hud-mode-value" class="text-amber-300 font-black text-xs sm:text-sm">50</span>
+        </div>
+        <div class="h-3 w-[1px] bg-white/20"></div>
         <div class="flex items-center gap-1.5 font-bold">
           <span class="text-slate-400 text-[9px] uppercase font-semibold">Trumpf</span>
           <span id="hud-trump-icon" class="w-3.5 h-3.5 inline-block"></span>
           <span id="hud-trump-name" class="text-amber-300 text-[11px]">Eichel</span>
-        </div>
-        <div class="h-3 w-[1px] bg-white/20"></div>
-        <div class="flex items-center gap-1 font-bold">
-          <span class="text-slate-400 text-[9px] uppercase font-semibold">Ziel</span>
-          <span id="hud-mode-value" class="text-amber-300 font-black text-xs sm:text-sm">50</span>
         </div>
       </div>
 
@@ -858,7 +860,7 @@ button{transition:transform .15s,background-color .2s,opacity .2s}button:active{
         <!-- TRUMPF- & MODUS-STAPEL (LINKS IN TAUSCHPHASE) -->
         <div id="trump-prep-box" class="prep-box flex flex-col items-center gap-0.5 text-center w-22 sm:w-28">
           <span class="text-[9px] font-extrabold uppercase tracking-widest text-slate-400">Trumpfkarte</span>
-          <div id="trump-card-slot" class="w-7 sm:w-16 rounded-xl shadow-xl flex items-center justify-center border border-white/20 bg-white/5 card-ratio" style="max-width:28px;max-height:44px;"></div>          <div class="mt-0.5 flex flex-col items-center">
+          <div id="trump-card-slot" class="w-12 sm:w-16 rounded-xl shadow-xl flex items-center justify-center border border-white/20 bg-white/5 card-ratio"></div>          <div class="mt-0.5 flex flex-col items-center">
             <div id="decisive-mode-number" class="text-2xl sm:text-3xl font-black tracking-tight text-amber-300 leading-none">50</div>
             <div class="text-[8px] sm:text-[9px] font-bold uppercase tracking-wider text-slate-400 mt-0.5">Punkte-Ziel</div>
           </div>
@@ -1347,10 +1349,10 @@ button{transition:transform .15s,background-color .2s,opacity .2s}button:active{
     };
 
     let App = {
-      user: 'Jan',
-      opponent: 'Rita',
+      user: 'Rita',
+      opponent: 'Jan',
       gameMode: 'bot',
-      deckType: 'german',
+      deckType: 'french',
       namingVariant: 'swiss',
       theme: 'felt',
 
@@ -1359,8 +1361,8 @@ button{transition:transform .15s,background-color .2s,opacity .2s}button:active{
       isHost: false,
 
       phase: 'STEP_SWAP4',
-      dealer: 'Rita',
-      currentTurn: 'Jan',
+      dealer: 'Jan',
+      currentTurn: 'Rita',
 
       trumpCard: null,
       trumpSuit: null,
@@ -1514,7 +1516,7 @@ button{transition:transform .15s,background-color .2s,opacity .2s}button:active{
     function loadPlayerPreferences(user) {
       let prefs = {};
       try { prefs = JSON.parse(localStorage.getItem('jass_player_preferences_' + user) || '{}'); } catch (e) {}
-      App.deckType = prefs.deckType === 'french' ? 'french' : 'german';
+      App.deckType = prefs.deckType === 'german' ? 'german' : 'french';
       App.namingVariant = prefs.namingVariant === 'german' ? 'german' : 'swiss';
       updateLocalPreferenceButtons();
     }
@@ -4495,7 +4497,7 @@ window.addEventListener('DOMContentLoaded',applyUI);
     window.addEventListener('DOMContentLoaded', () => {
       try {
         loadSavedProfiles();
-        selectUser('Jan');
+        selectUser('Rita');
         preloadAllCardImages().catch(err => console.warn('Kartenbilder-Preload:', err));
       } catch(e) {
         console.error(e);
