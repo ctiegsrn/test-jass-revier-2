@@ -2752,6 +2752,12 @@ button{transition:transform .15s,background-color .2s,opacity .2s}button:active{
       const botDecision = botChooseSmartWeis(App.oppHand, App.trumpSuit, App.activeModeId);
       App.oppChosenWeisList = botDecision;
       App.oppReady = true;
+
+      // ★ UI aktualisieren, damit der Tausch-Status sichtbar wird
+      try {
+        updateStepsUI();
+        renderAll();
+      } catch (e) { console.warn('botDoSwap render:', e); }
     }
 
     /* =========================================================================
@@ -2762,10 +2768,12 @@ button{transition:transform .15s,background-color .2s,opacity .2s}button:active{
       if (modeId === 'NULLER') return [];
 
       let chosen = [];
-      // 50er-Spiel: Weist NIEMALS 50! Nur maximal 20 oder 0 Punkte!
+      // 50er-Spiel: Weist selten (max. 1 Weis pro Runde), um das Spiel flüssig zu halten
       if (modeId === '50') {
+        if (Math.random() < 0.35) return [];   // ★ 65% Chance, gar nicht zu weisen
         let currentTotal = 0;
         groups.forEach(g => {
+          if (chosen.length >= 1) return;       // ★ nur 1 Weis maximal
           const safeOpts = g.options.filter(o => o.pts > 0 && o.pts <= 20 && (currentTotal + o.pts <= 25));
           if (safeOpts.length > 0) {
             const best = safeOpts[0];
@@ -2776,10 +2784,12 @@ button{transition:transform .15s,background-color .2s,opacity .2s}button:active{
         return chosen;
       }
 
-      // 100er-Spiel: Höchstens 20 Punkte weisen, um nicht zu ersaufen!
+      // 100er-Spiel: Weist nur selten (30% Chance), maximal 1 Weis
       if (modeId === '100') {
+        if (Math.random() < 0.7) return [];    // ★ 70% Chance, gar nicht zu weisen
         let currentTotal = 0;
         groups.forEach(g => {
+          if (chosen.length >= 1) return;
           const safeOpts = g.options.filter(o => o.pts > 0 && o.pts <= 20 && (currentTotal + o.pts <= 20));
           if (safeOpts.length > 0) {
             const best = safeOpts[0];
@@ -3123,7 +3133,11 @@ button{transition:transform .15s,background-color .2s,opacity .2s}button:active{
         }
 
         const modal = document.getElementById('weis-modal');
-        if (modal) modal.classList.remove('hidden');
+        if (modal) {
+          modal.classList.remove('hidden');
+          modal.style.zIndex = '70';    // ★ über alle anderen Modals
+        }
+        showTrickToast('Weis-Duell! Bitte „Weise annehmen" klicken.');
       } else {
         closeWeisModal();
       }
