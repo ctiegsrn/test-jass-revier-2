@@ -407,19 +407,21 @@ button{transition:transform .15s,background-color .2s,opacity .2s}button:active{
   /* ===== Mobile: Chat-Button mittig rechts ===== */
   @media (max-width: 640px) {
     #btn-open-chat {
-      top: auto !important;
-      bottom: 110px !important;
+      top: calc(28vh) !important;
+      bottom: auto !important;
       transform: none !important;
       right: 6px !important;
       width: 44px !important;
       height: 44px !important;
     }
-    #btn-open-chat:active { transform: scale(.94) !important; }    #chat-drawer {
-      top: 50% !important;
+    #btn-open-chat:active { transform: scale(.94) !important; }       #chat-drawer {
+      top: calc(28vh + 54px) !important;
       bottom: auto !important;
-      transform: translateY(-50%);
-      right: 8px !important;
-      max-height: 78dvh !important;
+      transform: none !important;
+      right: 6px !important;
+      width: calc(100vw - 20px) !important;
+      max-width: 360px !important;
+      max-height: 58dvh !important;
     }
     #slate-board {
       width: 92px;
@@ -429,20 +431,26 @@ button{transition:transform .15s,background-color .2s,opacity .2s}button:active{
     #slate-board .slate-marks { font-size: 18px; }
     #slate-board .slate-name { font-size: 10px; }
 
-    /* ===== Mobile: Handkarten größer & besser verteilt ===== */
+    /* ===== Mobile: Handkarten gross + horizontal scrollbar ===== */
     #my-cards-row {
-      padding-left: 2px !important;
-      padding-right: 2px !important;
+      padding-left: 6px !important;
+      padding-right: 6px !important;
+      justify-content: flex-start !important;
+      overflow-x: auto !important;
+      overflow-y: visible !important;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: none;
+      gap: 6px;
+      flex-wrap: nowrap !important;
     }
+    #my-cards-row::-webkit-scrollbar { display: none; }
     #my-cards-row .jass-card,
     #my-cards-row .pcard {
-      width: clamp(46px, 8.2vw, 62px) !important;
-      min-width: 46px !important;
-    }
-
-    /* Etwas weniger Überlappung, damit man die Karten besser erkennt */
-    #my-cards-row {
-      gap: 0;
+      width: 68px !important;
+      min-width: 68px !important;
+      flex: 0 0 auto !important;
+      margin-left: 0 !important;
+      margin-right: 0 !important;
     }
 
     /* HUD-Zeile der eigenen Hand kompakter */
@@ -455,6 +463,45 @@ button{transition:transform .15s,background-color .2s,opacity .2s}button:active{
     /* Gegner-Kartenreihe etwas größer (waren zu klein) */
     #opp-cards-row .card-back-swiss {
       width: clamp(34px, 6.4vw, 46px) !important;
+    }
+
+    /* Vorschau: grosse Karte mittig, überlagert Handkarten */
+    #card-preview-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 45;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      background: rgba(0, 0, 0, 0.55);
+      backdrop-filter: blur(3px);
+      -webkit-backdrop-filter: blur(3px);
+      pointer-events: auto;
+    }
+    #card-preview-overlay.active { display: flex; }
+    #card-preview-overlay .preview-card {
+      width: min(70vw, 300px);
+      filter: drop-shadow(0 20px 40px rgba(0,0,0,0.6));
+      animation: previewPop .22s ease-out;
+    }
+    #card-preview-overlay .preview-card .pcard {
+      width: 100% !important;
+      min-width: 0 !important;
+    }
+    @keyframes previewPop {
+      from { transform: scale(0.6); opacity: 0.4; }
+      to   { transform: scale(1);   opacity: 1; }
+    }
+    #card-preview-overlay .preview-hint {
+      position: absolute;
+      bottom: 12vh;
+      left: 0; right: 0;
+      text-align: center;
+      color: #fff;
+      font-size: 12px;
+      font-weight: 700;
+      text-shadow: 0 2px 6px rgba(0,0,0,.8);
+      letter-spacing: .03em;
     }  }
 </style>
 
@@ -4164,6 +4211,54 @@ createCardHtml=function(card,w){
  return `<div class="pcard card-ratio relative ${w}${trump?' is-trump':''}">${cardSVGForLocal(card)}${trump?'<span class="card-trump-crown">♛</span>':''}</div>`;
 };
 /* Alle nachfolgenden Funktionen (renderMyHand etc.) nutzen diese Version. */
+/* ============================================================
+   Mobile: 1× tippen = Vorschau, 2× tippen = spielen
+   Desktop: bisheriges Verhalten (1× Klick = spielen)
+   ============================================================ */
+let _previewCardId = null;
+let _previewTimer = null;
+const _isMobile = () => window.matchMedia('(max-width: 640px)').matches;
+
+function ensurePreviewOverlay() {
+  let ov = document.getElementById('card-preview-overlay');
+  if (ov) return ov;
+  ov = document.createElement('div');
+  ov.id = 'card-preview-overlay';
+  ov.innerHTML = `
+    <div class="preview-card"></div>
+    <div class="preview-hint">Nochmal tippen zum Spielen · woanders tippen zum Schliessen</div>
+  `;
+  ov.addEventListener('click', (e) => {
+    if (e.target === ov) closeCardPreview();
+  });
+  document.body.appendChild(ov);
+  return ov;
+}
+
+function showCardPreview(card) {
+  const ov = ensurePreviewOverlay();
+  const slot = ov.querySelector('.preview-card');
+  slot.innerHTML = `<div class="pcard card-ratio">${cardSVGForLocal(card)}</div>`;
+  ov.classList.add('active');
+  _previewCardId = card.id;
+  // nochmaliges Tippen auf die grosse Karte = spielen
+  slot.onclick = (e) => {
+    e.stopPropagation();
+    if (_previewCardId === card.id) {
+      closeCardPreview();
+      // Spiel-Zug auslösen
+      const el = document.querySelector(`[data-card-id="${card.id}"]`);
+      onPlayerClickCard(card, el);
+    }
+  };
+}
+
+function closeCardPreview() {
+  const ov = document.getElementById('card-preview-overlay');
+  if (ov) ov.classList.remove('active');
+  _previewCardId = null;
+}
+
 renderMyHand=function(){
  const c=document.getElementById('my-cards-row');if(!c)return;c.innerHTML='';
  App.myHand.forEach(card=>{
@@ -4172,7 +4267,22 @@ renderMyHand=function(){
   el.className='jass-card pcard card-ratio relative w-12 sm:w-16 md:w-20'+(App.selectedSwapCards.includes(card.id)?' selected-for-swap':'')+(trump?' is-trump':'');
   el.dataset.cardId=card.id;
   el.innerHTML=cardSVGForLocal(card)+(trump?'<span class="card-trump-crown">♛</span>':'');
-  el.onclick=()=>onPlayerClickCard(card,el);c.appendChild(el);
+  el.onclick=(ev) => {
+    // Auf Mobile: 1× = Vorschau, 2× = spielen
+    if (_isMobile() && App.phase === 'PLAY') {
+      ev.stopPropagation();
+      if (_previewCardId === card.id) {
+        closeCardPreview();
+        onPlayerClickCard(card, el);
+      } else {
+        showCardPreview(card);
+      }
+      return;
+    }
+    // Desktop oder Phase ≠ PLAY: bisheriges Verhalten
+    onPlayerClickCard(card, el);
+  };
+  c.appendChild(el);
  });
 };
 
@@ -4295,6 +4405,16 @@ window.addEventListener('DOMContentLoaded',applyUI);
       }
     });
     window.addEventListener('pointerdown',()=>Sound.init(),{passive:true});
+    /* Mobile: Tippen ausserhalb der Vorschau schliesst sie */
+    window.addEventListener('pointerdown', (e) => {
+      const ov = document.getElementById('card-preview-overlay');
+      if (!ov || !ov.classList.contains('active')) return;
+      if (e.target.closest('#card-preview-overlay')) return; // Klick in Overlay wird intern geregelt
+      closeCardPreview();
+    }, { passive: true });
+    window.addEventListener('resize', () => {
+      if (!window.matchMedia('(max-width: 640px)').matches) closeCardPreview();
+    });
   </script>
 </body>
 </html>
