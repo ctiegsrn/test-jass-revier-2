@@ -529,8 +529,8 @@ button{transition:transform .15s,background-color .2s,opacity .2s}button:active{
       display: none;
       flex-direction: column;
       align-items: center;
-      justify-content: flex-start;
-      padding-top: 60px;
+      justify-content: flex-end;
+      padding-bottom: 0;
       background: rgba(0, 0, 0, 0.75);
       backdrop-filter: blur(6px);
       -webkit-backdrop-filter: blur(6px);
@@ -540,7 +540,7 @@ button{transition:transform .15s,background-color .2s,opacity .2s}button:active{
     #card-preview-overlay.active { display: flex; }
     #card-preview-overlay .preview-card {
       width: min(49vw, 216px);
-      margin-top: 60px;
+      margin-bottom: 148px;
       filter: drop-shadow(0 24px 48px rgba(0,0,0,0.8));
       animation: previewPop .22s ease-out;
       cursor: pointer;
