@@ -278,6 +278,11 @@ button{transition:transform .15s,background-color .2s,opacity .2s}button:active{
   .jass-card{background:transparent!important;border:0!important;}
   .card-back-swiss{background:var(--card-back) center/100% 100% no-repeat!important;border:0!important;position:relative;overflow:hidden;border-radius:8%/5%!important;}
   .card-back-swiss>span{position:relative;z-index:2;}
+    #opp-cards-row .card-back-swiss {
+    height: auto;
+    aspect-ratio: 57 / 89;
+    flex: 0 0 auto;
+  }
   #look-sheet{align-items:center!important;padding:14px!important;}
   .sheet.look-sheet{width:min(100%,560px)!important;max-width:560px!important;max-height:min(92dvh,920px)!important;overflow-y:auto!important;overflow-x:hidden!important;padding:22px 22px calc(24px + env(safe-area-inset-bottom))!important;border:1px solid rgba(225,194,130,.24)!important;border-radius:28px!important;background:linear-gradient(155deg,rgba(26,34,29,.98),rgba(13,19,16,.985))!important;box-shadow:0 30px 100px rgba(0,0,0,.62),inset 0 1px 0 rgba(255,255,255,.07)!important;}
   .look-sheet-head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:8px;}
@@ -499,9 +504,17 @@ button{transition:transform .15s,background-color .2s,opacity .2s}button:active{
 
     /* Gegner + Tisch + Leisten etwas kompakter → Hand bekommt mehr Platz */
     #opp-player-hud { padding: 0 8px !important; font-size: 10px !important; }
-    #opp-cards-row { height: 44px !important; padding: 2px 0 !important; }
+    #opp-cards-row {
+      height: auto !important;
+      min-height: 60px;
+      padding: 2px 0 !important;
+      align-items: center;
+    }
     #opp-cards-row .card-back-swiss {
       width: clamp(32px, 6vw, 44px) !important;
+      height: auto !important;
+      aspect-ratio: 57 / 89 !important;
+      flex: 0 0 auto;
     }
     #step-swap4-bar, #step-trump-swap-bar, #step-ready-bar {
       margin-top: 2px !important; margin-bottom: 2px !important;
@@ -786,6 +799,16 @@ button{transition:transform .15s,background-color .2s,opacity .2s}button:active{
         </div>
       </div>
 
+      <div class="text-left mt-2">
+        <button onclick="quickOnlineStart()" class="w-full py-2.5 sm:py-3 px-3.5 rounded-2xl bg-emerald-500 hover:bg-emerald-400 font-black text-xs sm:text-sm text-slate-950 flex items-center justify-between shadow-xl transition-all">
+          <span class="flex items-center gap-2.5">
+            <span class="text-lg">⚡</span>
+            <span>Express: Letzten Raum verbinden</span>
+          </span>
+          <span class="text-[10px] bg-black/20 text-slate-950 px-2 py-0.5 rounded-full font-bold">1-Klick</span>
+        </button>
+      </div>
+
     </div>
   </div>
 
@@ -876,7 +899,7 @@ button{transition:transform .15s,background-color .2s,opacity .2s}button:active{
 
         <span id="opp-weis-badge" class="hidden px-1.5 py-0.2 rounded-md bg-sky-500/20 text-sky-300 text-[9px] border border-sky-400/30">Weis: +0</span>
       </div>
-      <div id="opp-cards-row" class="flex justify-center -space-x-5 sm:-space-x-7 h-14 sm:h-18 overflow-hidden py-0.5 w-full max-w-md"></div>
+      <div id="opp-cards-row" class="flex justify-center -space-x-5 sm:-space-x-7 overflow-hidden py-0.5 w-full max-w-md" style="min-height:80px;align-items:center;"></div>
     </div>
     <!-- TISCH-MITTE: PERFEKT MITTIG IM BILDFELD -->
     <div class="my-auto w-full flex flex-col items-center justify-center relative">
@@ -2103,6 +2126,7 @@ button{transition:transform .15s,background-color .2s,opacity .2s}button:active{
         if (App.conn) { try { App.conn.close(); } catch(e) {} }
         App.sessionStarted = false;
         App.isHost = false;
+        setLastRoomCode(code);
         App.conn = App.peer.connect(code, { reliable: true });
         setupConn(App.conn, false);
         showTrickToast('Verbindungsanfrage wird gesendet …');
@@ -2117,6 +2141,7 @@ button{transition:transform .15s,background-color .2s,opacity .2s}button:active{
       const code = inp ? inp.value.trim() : '';
       if (!code) return alert('Bitte zuerst den Raum-Code eingeben.');
       if (code.length < 4) return alert('Der Raum-Code scheint unvollständig zu sein.');
+      setLastRoomCode(code);
       App.pendingPeerCode = code;
       initPeer();
       if (App.peer && App.peer.open) {
@@ -2127,7 +2152,32 @@ button{transition:transform .15s,background-color .2s,opacity .2s}button:active{
       }
     }
 
-    function setNetworkStatus(online, label) {
+    /* ===== EXPRESS-ONLINE: Letzten Raum-Code merken und 1-Klick-Verbindung ===== */
+    function getLastRoomCode() {
+      try { return localStorage.getItem('jass_last_room_code') || ''; } catch (e) { return ''; }
+    }
+    function setLastRoomCode(code) {
+      try { localStorage.setItem('jass_last_room_code', code); } catch (e) {}
+    }
+
+    function quickOnlineStart() {
+      const last = getLastRoomCode();
+      if (!last) {
+        showOnlineLobby();
+        showTrickToast('Noch kein Raum gemerkt. Bitte einmal den Code eintragen.');
+        return;
+      }
+      const inp = document.getElementById('remote-peer-input');
+      if (inp) inp.value = last;
+      showTrickToast('Verbinde mit letztem Raum …');
+      initPeer();
+      if (App.peer && App.peer.open) {
+        connectToRoomCode(last);
+      } else {
+        App.pendingPeerCode = last;
+      }
+    }
+
       const pill = document.getElementById('network-pill');
       if (!pill) return;
       pill.className = online
@@ -3870,7 +3920,11 @@ button{transition:transform .15s,background-color .2s,opacity .2s}button:active{
       const count = App.oppHand.length;
       for (let i = 0; i < count; i++) {
         const el = document.createElement('div');
-        el.className = 'w-9 sm:w-11 rounded-lg card-back-swiss shadow-md card-ratio';
+        el.className = 'rounded-lg card-back-swiss shadow-md';
+        el.style.width = '38px';
+        el.style.height = 'auto';
+        el.style.aspectRatio = '57 / 89';
+        el.style.flex = '0 0 auto';
         container.appendChild(el);
       }
     }
