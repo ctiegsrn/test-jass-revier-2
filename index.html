@@ -426,17 +426,8 @@ button{transition:transform .15s,background-color .2s,opacity .2s}button:active{
       max-height: 55dvh !important;
     }
     #slate-board {
-      width: 92px;
-      left: 3px;
-      padding: 10px 7px 12px;
-    }
-    #slate-board .slate-marks { font-size: 18px; }
-    #slate-board .slate-name { font-size: 10px; }
-
-    /* ===== Mobile: Layout kompakt, Handkarten sichtbar, Schiefertafel oben klein ===== */
-    #slate-board {
       position: fixed !important;
-      top: 8vh !important;
+      top: 2vh !important;
       left: 50% !important;
       right: auto !important;
       transform: translateX(-50%) !important;
@@ -446,8 +437,7 @@ button{transition:transform .15s,background-color .2s,opacity .2s}button:active{
       border-width: 1.5px !important;
       box-shadow: 0 8px 18px rgba(0,0,0,.55) !important;
       z-index: 26 !important;
-    }
-    #slate-board .slate-title {
+    }    #slate-board .slate-title {
       font-size: 6px !important;
       letter-spacing: .1em !important;
       margin-bottom: 3px !important;
@@ -474,7 +464,7 @@ button{transition:transform .15s,background-color .2s,opacity .2s}button:active{
 
     /* Handkarten bleiben gross, aber passen jetzt ins Bild */
     #my-cards-row {
-      padding: 0 6px 2px 6px !important;
+      padding: 4px 6px 4px 6px !important;
       justify-content: flex-start !important;
       overflow-x: auto !important;
       overflow-y: visible !important;
@@ -483,8 +473,7 @@ button{transition:transform .15s,background-color .2s,opacity .2s}button:active{
       gap: 6px;
       flex-wrap: nowrap !important;
       align-items: flex-end;
-      min-height: 168px;
-      max-height: 176px;
+      min-height: 176px;
       flex-shrink: 0;
     }
     #my-cards-row::-webkit-scrollbar { display: none; }
@@ -804,7 +793,10 @@ button{transition:transform .15s,background-color .2s,opacity .2s}button:active{
   </header>
 
   <!-- SPIELTISCH: VOLLKOMMEN MITTIG PLATZIERT -->
-  <main class="flex-1 w-full max-w-5xl mx-auto p-1 sm:p-2 flex flex-col justify-between items-center relative overflow-hidden" style="min-height:0;padding-bottom:0;">
+  <main id="game-main" class="flex-1 w-full max-w-5xl mx-auto p-1 sm:p-2 flex flex-col justify-between items-center relative overflow-y-auto" style="min-height:0;padding-bottom:0;-webkit-overflow-scrolling:touch;">
+
+    <!-- SCROLLBARER BEREICH: GEGNER + TISCH + LEISTEN -->
+    <div id="scroll-stage" class="w-full flex flex-col items-center justify-between flex-1 min-h-0 overflow-y-auto" style="-webkit-overflow-scrolling:touch;">
 
     <!-- GEGNER (OBEN, WÄHREND DES SPIELS SEHR DEZENT) -->
     <div class="flex flex-col items-center gap-0.5 shrink-0 w-full">
@@ -827,7 +819,6 @@ button{transition:transform .15s,background-color .2s,opacity .2s}button:active{
       </div>
       <div id="opp-cards-row" class="flex justify-center -space-x-5 sm:-space-x-7 h-14 sm:h-18 overflow-hidden py-0.5 w-full max-w-md"></div>
     </div>
-
     <!-- TISCH-MITTE: PERFEKT MITTIG IM BILDFELD -->
     <div class="my-auto w-full flex flex-col items-center justify-center relative">
       
@@ -934,8 +925,10 @@ button{transition:transform .15s,background-color .2s,opacity .2s}button:active{
       </div>
     </div>
 
-    <!-- EIGENE HAND (UNTEN, WÄHREND DES SPIELS SEHR DEZENT) -->
-    <div class="flex flex-col items-center gap-0.5 shrink-0 pb-1 w-full">
+    </div><!-- /#scroll-stage -->
+
+    <!-- EIGENE HAND: FIX UNTEN, IMMER KOMPLETT SICHTBAR -->
+    <div class="flex flex-col items-center gap-0.5 shrink-0 pb-1 w-full" style="position:sticky;bottom:0;">
       <div id="my-player-hud" class="flex items-center gap-2 px-3 py-0.5 rounded-full apple-panel text-[11px] shadow transition-all">
         <span id="my-avatar" class="text-sm">👱‍♂️</span>
         <span id="my-name" class="font-bold text-white">Jan</span>
