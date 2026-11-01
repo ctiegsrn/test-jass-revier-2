@@ -2125,7 +2125,7 @@ button{transition:transform .15s,background-color .2s,opacity .2s}button:active{
       try {
         if (App.conn) { try { App.conn.close(); } catch(e) {} }
         App.sessionStarted = false;
-        App.isHost = false;
+        App.isHost = false;   // ★ ausgehende Verbindung = Gast, nie Host
         setLastRoomCode(code);
         App.conn = App.peer.connect(code, { reliable: true });
         setupConn(App.conn, false);
@@ -2143,6 +2143,7 @@ button{transition:transform .15s,background-color .2s,opacity .2s}button:active{
       if (code.length < 4) return alert('Der Raum-Code scheint unvollständig zu sein.');
       setLastRoomCode(code);
       App.pendingPeerCode = code;
+      App.isHost = false;   // ★ manueller Beitritt = immer Gast
       initPeer();
       if (App.peer && App.peer.open) {
         App.pendingPeerCode = null;
@@ -2170,6 +2171,7 @@ button{transition:transform .15s,background-color .2s,opacity .2s}button:active{
       const inp = document.getElementById('remote-peer-input');
       if (inp) inp.value = last;
       showTrickToast('Verbinde mit letztem Raum …');
+      App.isHost = false;   // ★ Express = immer Gast
       initPeer();
       if (App.peer && App.peer.open) {
         connectToRoomCode(last);
@@ -2311,30 +2313,21 @@ button{transition:transform .15s,background-color .2s,opacity .2s}button:active{
           App.nullerSwapInfo = null;
           App.currentTurn = data.currentTurn;
 
-          // ★ WICHTIG: Ergebnis-Modal schließen und alle alten Modals zurücksetzen
-          const rm = document.getElementById('result-modal');
-          if (rm) rm.classList.add('hidden');
-          const wm = document.getElementById('weis-modal');
-          if (wm) wm.classList.add('hidden');
-          const wsm = document.getElementById('weis-select-modal');
-          if (wsm) wsm.classList.add('hidden');
-          const stm = document.getElementById('stoeck-modal');
-          if (stm) stm.classList.add('hidden');
-          const ftm = document.getElementById('first-trick-modal');
-          if (ftm) ftm.classList.add('hidden');
-          const eeb = document.getElementById('early-end-bar');
-          if (eeb) eeb.classList.add('hidden');
-          const vft = document.getElementById('btn-view-first-trick');
+          // ★★★ ALLE MODALS SCHLIESSEN ★★★
+          ['result-modal','weis-modal','weis-select-modal','stoeck-modal',
+           'first-trick-modal','early-end-bar','incoming-game-modal'].forEach(function(id){
+            var el = document.getElementById(id);
+            if (el) { el.classList.add('hidden'); el.classList.remove('flex'); }
+          });
+          var vft = document.getElementById('btn-view-first-trick');
           if (vft) vft.classList.add('hidden');
-
-          // Deck für den Gast rekonstruieren ist nicht nötig — Karten stehen schon.
-          // Aber: der Bot-Code läuft beim Gast nicht — das ist OK.
 
           sortHand(App.myHand);
           resetTeppichView();
           renderAll();
           renderNullerSwapInfo();
           renderSlate();
+          showTrickToast('Neue Runde vom Host erhalten – bitte 4 Karten tauschen.');
         } else if (data.type === 'CARD_PLAYED') {
           executePlayCard(data.player, data.card);
                } else if (data.type === 'TRUMP_SWAPPED') {
@@ -2376,8 +2369,10 @@ button{transition:transform .15s,background-color .2s,opacity .2s}button:active{
         App.matchOver = false;
       }
 
-      // ★ Online-Gast darf keine Runde lokal starten — der Host teilt aus
-      if (App.gameMode === 'online' && !App.isHost) {
+      // ★ Online: Nur der Host darf eine Runde starten und die Karten austeilen.
+      //   Der Gast wartet auf SYNC_ROUND. Wenn isHost unklar ist (z.B. nach
+      //   Express-Verbindung), lassen wir den Klick durch, damit nichts blockiert.
+      if (App.gameMode === 'online' && App.isHost === false && App.conn && App.conn.open) {
         showTrickToast('Warte auf die nächste Runde vom Host …');
         return;
       }
@@ -2450,16 +2445,22 @@ button{transition:transform .15s,background-color .2s,opacity .2s}button:active{
       renderNullerSwapInfo();
 
       if (App.gameMode === 'online' && App.isHost) {
+        // Sicherstellen, dass die Gegner-Hand wirklich die aktuelle ist
+        // (falls botDoSwap sie schon verändert hat – beim Host im Online-Modus nicht,
+        //  aber der Snapshot schadet nie)
+        const oppHandSnapshot = App.oppHand.map(c => Object.assign({}, c));
+        const oppReserveSnapshot = App.oppReserve.map(c => Object.assign({}, c));
         sendNet({
           type: 'SYNC_ROUND',
           trumpCard: App.trumpCard,
           trumpSuit: App.trumpSuit,
           activeModeId: App.activeModeId,
-          clientHand: App.oppHand,
-          clientReserve: App.oppReserve,
+          clientHand: oppHandSnapshot,
+          clientReserve: oppReserveSnapshot,
           dealer: App.dealer,
           currentTurn: App.currentTurn
         });
+        showTrickToast('Neue Runde ausgeteilt – warte auf Bereitschaft.');
       }
 
       if (App.gameMode === 'bot') {
