@@ -427,7 +427,7 @@ button{transition:transform .15s,background-color .2s,opacity .2s}button:active{
     }
     #slate-board {
       position: fixed !important;
-      top: 10vh !important;
+      top: 14vh !important;
       left: 0 !important;
       right: auto !important;
       transform: none !important;
@@ -849,8 +849,7 @@ button{transition:transform .15s,background-color .2s,opacity .2s}button:active{
         <!-- TRUMPF- & MODUS-STAPEL (LINKS IN TAUSCHPHASE) -->
         <div id="trump-prep-box" class="prep-box flex flex-col items-center gap-0.5 text-center w-22 sm:w-28">
           <span class="text-[9px] font-extrabold uppercase tracking-widest text-slate-400">Trumpfkarte</span>
-          <div id="trump-card-slot" class="w-13 sm:w-16 rounded-xl shadow-xl flex items-center justify-center border border-white/20 bg-white/5 card-ratio"></div>
-          <div class="mt-0.5 flex flex-col items-center">
+          <div id="trump-card-slot" class="w-7 sm:w-16 rounded-xl shadow-xl flex items-center justify-center border border-white/20 bg-white/5 card-ratio"></div>          <div class="mt-0.5 flex flex-col items-center">
             <div id="decisive-mode-number" class="text-2xl sm:text-3xl font-black tracking-tight text-amber-300 leading-none">50</div>
             <div class="text-[8px] sm:text-[9px] font-bold uppercase tracking-wider text-slate-400 mt-0.5">Punkte-Ziel</div>
           </div>
@@ -3771,7 +3770,7 @@ button{transition:transform .15s,background-color .2s,opacity .2s}button:active{
         slot.innerHTML = `<span class="text-xs text-slate-400">Leer</span>`;
         return;
       }
-      slot.innerHTML = createCardHtml(App.trumpCard, 'w-13 sm:w-16 text-xs sm:text-sm');
+      slot.innerHTML = createCardHtml(App.trumpCard, 'w-7 sm:w-16 text-xs sm:text-sm');
       const numEl = document.getElementById('decisive-mode-number');
       if (numEl) numEl.textContent = getModeSimpleNumber(App.activeModeId);
     }
