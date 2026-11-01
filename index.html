@@ -2310,6 +2310,26 @@ button{transition:transform .15s,background-color .2s,opacity .2s}button:active{
           App.firstTrickData = null;
           App.nullerSwapInfo = null;
           App.currentTurn = data.currentTurn;
+
+          // ★ WICHTIG: Ergebnis-Modal schließen und alle alten Modals zurücksetzen
+          const rm = document.getElementById('result-modal');
+          if (rm) rm.classList.add('hidden');
+          const wm = document.getElementById('weis-modal');
+          if (wm) wm.classList.add('hidden');
+          const wsm = document.getElementById('weis-select-modal');
+          if (wsm) wsm.classList.add('hidden');
+          const stm = document.getElementById('stoeck-modal');
+          if (stm) stm.classList.add('hidden');
+          const ftm = document.getElementById('first-trick-modal');
+          if (ftm) ftm.classList.add('hidden');
+          const eeb = document.getElementById('early-end-bar');
+          if (eeb) eeb.classList.add('hidden');
+          const vft = document.getElementById('btn-view-first-trick');
+          if (vft) vft.classList.add('hidden');
+
+          // Deck für den Gast rekonstruieren ist nicht nötig — Karten stehen schon.
+          // Aber: der Bot-Code läuft beim Gast nicht — das ist OK.
+
           sortHand(App.myHand);
           resetTeppichView();
           renderAll();
@@ -2354,6 +2374,12 @@ button{transition:transform .15s,background-color .2s,opacity .2s}button:active{
       if (App.matchOver) {
         App.matchWins = { Jan: 0, Rita: 0 };
         App.matchOver = false;
+      }
+
+      // ★ Online-Gast darf keine Runde lokal starten — der Host teilt aus
+      if (App.gameMode === 'online' && !App.isHost) {
+        showTrickToast('Warte auf die nächste Runde vom Host …');
+        return;
       }
       renderSlate();
 
