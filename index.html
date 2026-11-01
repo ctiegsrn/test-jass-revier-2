@@ -2178,6 +2178,7 @@ button{transition:transform .15s,background-color .2s,opacity .2s}button:active{
       }
     }
 
+    function setNetworkStatus(online, label) {
       const pill = document.getElementById('network-pill');
       if (!pill) return;
       pill.className = online
