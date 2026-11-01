@@ -2356,7 +2356,18 @@ button{transition:transform .15s,background-color .2s,opacity .2s}button:active{
     }
 
     function sendNet(msg) {
-      if (App.conn && App.conn.open) App.conn.send(msg);
+      if (App.conn && App.conn.open) {
+        try {
+          App.conn.send(msg);
+          return true;
+        } catch (e) {
+          console.warn('sendNet fehlgeschlagen:', e);
+          showTrickToast('Nachricht konnte nicht gesendet werden – Verbindung prüfen.');
+          return false;
+        }
+      }
+      console.warn('sendNet: keine offene Verbindung', msg);
+      return false;
     }
 
     /* =========================================================================
@@ -2374,6 +2385,10 @@ button{transition:transform .15s,background-color .2s,opacity .2s}button:active{
       //   Express-Verbindung), lassen wir den Klick durch, damit nichts blockiert.
       if (App.gameMode === 'online' && App.isHost === false && App.conn && App.conn.open) {
         showTrickToast('Warte auf die nächste Runde vom Host …');
+        return;
+      }
+      if (App.gameMode === 'online' && (!App.conn || !App.conn.open)) {
+        showTrickToast('Keine Online-Verbindung – bitte neu verbinden.');
         return;
       }
       renderSlate();
