@@ -407,13 +407,14 @@ button{transition:transform .15s,background-color .2s,opacity .2s}button:active{
   /* ===== Mobile: Chat-Button mittig rechts ===== */
   @media (max-width: 640px) {
     #btn-open-chat {
-      top: 50% !important;
-      bottom: auto !important;
-      transform: translateY(-50%);
-      right: 4px !important;
+      top: auto !important;
+      bottom: 110px !important;
+      transform: none !important;
+      right: 6px !important;
+      width: 44px !important;
+      height: 44px !important;
     }
-    #btn-open-chat:active { transform: translateY(-50%) scale(.94); }
-    #chat-drawer {
+    #btn-open-chat:active { transform: scale(.94) !important; }    #chat-drawer {
       top: 50% !important;
       bottom: auto !important;
       transform: translateY(-50%);
@@ -427,7 +428,34 @@ button{transition:transform .15s,background-color .2s,opacity .2s}button:active{
     }
     #slate-board .slate-marks { font-size: 18px; }
     #slate-board .slate-name { font-size: 10px; }
-  }
+
+    /* ===== Mobile: Handkarten größer & besser verteilt ===== */
+    #my-cards-row {
+      padding-left: 2px !important;
+      padding-right: 2px !important;
+    }
+    #my-cards-row .jass-card,
+    #my-cards-row .pcard {
+      width: clamp(46px, 8.2vw, 62px) !important;
+      min-width: 46px !important;
+    }
+
+    /* Etwas weniger Überlappung, damit man die Karten besser erkennt */
+    #my-cards-row {
+      gap: 0;
+    }
+
+    /* HUD-Zeile der eigenen Hand kompakter */
+    #my-player-hud {
+      padding-top: 1px !important;
+      padding-bottom: 1px !important;
+      font-size: 10px !important;
+    }
+
+    /* Gegner-Kartenreihe etwas größer (waren zu klein) */
+    #opp-cards-row .card-back-swiss {
+      width: clamp(34px, 6.4vw, 46px) !important;
+    }  }
 </style>
 
 
