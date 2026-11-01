@@ -427,10 +427,10 @@ button{transition:transform .15s,background-color .2s,opacity .2s}button:active{
     }
     #slate-board {
       position: fixed !important;
-      top: 2vh !important;
-      left: 50% !important;
+      top: 10vh !important;
+      left: 6px !important;
       right: auto !important;
-      transform: translateX(-50%) !important;
+      transform: none !important;
       width: 54px !important;
       padding: 4px 4px 6px !important;
       border-radius: 8px !important;
@@ -463,17 +463,20 @@ button{transition:transform .15s,background-color .2s,opacity .2s}button:active{
     }
 
     /* Handkarten bleiben gross, aber passen jetzt ins Bild */
+    /* Handkarten-Container: feste Höhe, Karten werden immer komplett gezeigt */
     #my-cards-row {
-      padding: 4px 6px 4px 6px !important;
+      padding: 6px 6px 6px 6px !important;
       justify-content: flex-start !important;
       overflow-x: auto !important;
-      overflow-y: visible !important;
+      overflow-y: hidden !important;
       -webkit-overflow-scrolling: touch;
       scrollbar-width: none;
       gap: 6px;
       flex-wrap: nowrap !important;
       align-items: flex-end;
-      min-height: 176px;
+      height: 148px !important;
+      min-height: 148px !important;
+      max-height: 148px !important;
       flex-shrink: 0;
     }
     #my-cards-row::-webkit-scrollbar { display: none; }
@@ -481,10 +484,12 @@ button{transition:transform .15s,background-color .2s,opacity .2s}button:active{
     #my-cards-row .pcard {
       width: 82px !important;
       min-width: 82px !important;
+      height: 128px !important;
       flex: 0 0 auto !important;
       margin-left: 0 !important;
       margin-right: 0 !important;
     }
+
 
     /* Eigene HUD-Zeile kompakt */
     #my-player-hud {
@@ -599,7 +604,7 @@ button{transition:transform .15s,background-color .2s,opacity .2s}button:active{
 </style>
 
 </head>
-<body class="felt-theme text-white flex flex-col justify-between overflow-hidden">
+<body class="felt-theme text-white flex flex-col justify-between overflow-hidden" style="overflow:hidden;">
 <!-- SCHIEFERTAFEL: 7 STRICHE = SIEG -->
 <div id="slate-board" aria-label="Strichliste bis 7 Siege">
   <div class="slate-title">Strichliste</div>
@@ -793,11 +798,9 @@ button{transition:transform .15s,background-color .2s,opacity .2s}button:active{
   </header>
 
   <!-- SPIELTISCH: VOLLKOMMEN MITTIG PLATZIERT -->
-  <main id="game-main" class="flex-1 w-full max-w-5xl mx-auto p-1 sm:p-2 flex flex-col justify-between items-center relative overflow-y-auto" style="min-height:0;padding-bottom:0;-webkit-overflow-scrolling:touch;">
-
+  <main id="game-main" class="flex-1 w-full max-w-5xl mx-auto p-1 sm:p-2 flex flex-col justify-between items-center relative overflow-hidden" style="min-height:0;padding-bottom:0;">
     <!-- SCROLLBARER BEREICH: GEGNER + TISCH + LEISTEN -->
-    <div id="scroll-stage" class="w-full flex flex-col items-center justify-between flex-1 min-h-0 overflow-y-auto" style="-webkit-overflow-scrolling:touch;">
-
+    <div id="scroll-stage" class="w-full flex flex-col items-center justify-between flex-1 min-h-0 overflow-y-auto" style="-webkit-overflow-scrolling:touch;padding-bottom:8px;">
     <!-- GEGNER (OBEN, WÄHREND DES SPIELS SEHR DEZENT) -->
     <div class="flex flex-col items-center gap-0.5 shrink-0 w-full">
       <div id="opp-player-hud" class="flex items-center gap-2 px-3 py-0.5 rounded-full apple-panel text-[11px] shadow transition-all">
