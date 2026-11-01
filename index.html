@@ -407,21 +407,23 @@ button{transition:transform .15s,background-color .2s,opacity .2s}button:active{
   /* ===== Mobile: Chat-Button mittig rechts ===== */
   @media (max-width: 640px) {
     #btn-open-chat {
-      top: calc(28vh) !important;
+      top: 14vh !important;
       bottom: auto !important;
       transform: none !important;
       right: 6px !important;
       width: 44px !important;
       height: 44px !important;
+      z-index: 46 !important;
     }
-    #btn-open-chat:active { transform: scale(.94) !important; }       #chat-drawer {
-      top: calc(28vh + 54px) !important;
+    #btn-open-chat:active { transform: scale(.94) !important; }
+    #chat-drawer {
+      top: calc(14vh + 52px) !important;
       bottom: auto !important;
       transform: none !important;
       right: 6px !important;
       width: calc(100vw - 20px) !important;
       max-width: 360px !important;
-      max-height: 58dvh !important;
+      max-height: 55dvh !important;
     }
     #slate-board {
       width: 92px;
@@ -433,21 +435,22 @@ button{transition:transform .15s,background-color .2s,opacity .2s}button:active{
 
     /* ===== Mobile: Handkarten gross + horizontal scrollbar ===== */
     #my-cards-row {
-      padding-left: 6px !important;
-      padding-right: 6px !important;
+      padding-left: 8px !important;
+      padding-right: 8px !important;
       justify-content: flex-start !important;
       overflow-x: auto !important;
       overflow-y: visible !important;
       -webkit-overflow-scrolling: touch;
       scrollbar-width: none;
-      gap: 6px;
+      gap: 8px;
       flex-wrap: nowrap !important;
+      min-height: 108px;
     }
     #my-cards-row::-webkit-scrollbar { display: none; }
     #my-cards-row .jass-card,
     #my-cards-row .pcard {
-      width: 68px !important;
-      min-width: 68px !important;
+      width: 84px !important;
+      min-width: 84px !important;
       flex: 0 0 auto !important;
       margin-left: 0 !important;
       margin-right: 0 !important;
@@ -480,9 +483,16 @@ button{transition:transform .15s,background-color .2s,opacity .2s}button:active{
     }
     #card-preview-overlay.active { display: flex; }
     #card-preview-overlay .preview-card {
-      width: min(70vw, 300px);
+      width: min(78vw, 340px);
       filter: drop-shadow(0 20px 40px rgba(0,0,0,0.6));
       animation: previewPop .22s ease-out;
+      cursor: pointer;
+    }
+    #card-preview-overlay .preview-card .pcard {
+      width: 100% !important;
+      min-width: 0 !important;
+      border-radius: 12px !important;
+      box-shadow: 0 0 0 2px #e6bf68, 0 0 0 5px rgba(230,191,104,.2), 0 20px 40px rgba(0,0,0,.5) !important;
     }
     #card-preview-overlay .preview-card .pcard {
       width: 100% !important;
@@ -4268,13 +4278,16 @@ renderMyHand=function(){
   el.dataset.cardId=card.id;
   el.innerHTML=cardSVGForLocal(card)+(trump?'<span class="card-trump-crown">♛</span>':'');
   el.onclick=(ev) => {
-    // Auf Mobile: 1× = Vorschau, 2× = spielen
+    // Auf Mobile: 1× = Vorschau, 2× auf gleicher Karte = spielen
     if (_isMobile() && App.phase === 'PLAY') {
       ev.stopPropagation();
+      ev.preventDefault();
       if (_previewCardId === card.id) {
+        // zweiter Tap auf gleiche Karte → spielen
         closeCardPreview();
         onPlayerClickCard(card, el);
       } else {
+        // erster Tap → Vorschau (egal ob eine andere schon offen war)
         showCardPreview(card);
       }
       return;
@@ -4406,10 +4419,14 @@ window.addEventListener('DOMContentLoaded',applyUI);
     });
     window.addEventListener('pointerdown',()=>Sound.init(),{passive:true});
     /* Mobile: Tippen ausserhalb der Vorschau schliesst sie */
-    window.addEventListener('pointerdown', (e) => {
+    document.addEventListener('click', (e) => {
       const ov = document.getElementById('card-preview-overlay');
       if (!ov || !ov.classList.contains('active')) return;
-      if (e.target.closest('#card-preview-overlay')) return; // Klick in Overlay wird intern geregelt
+      // Tipp auf Vorschau-Karte selbst → intern geregelt (spielt Karte)
+      if (e.target.closest('#card-preview-overlay')) return;
+      // Tipp auf eine Handkarte → intern geregelt (öffnet oder spielt)
+      if (e.target.closest('#my-cards-row')) return;
+      // Alles andere → Vorschau schließen
       closeCardPreview();
     }, { passive: true });
     window.addEventListener('resize', () => {
