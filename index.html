@@ -540,15 +540,17 @@ button{transition:transform .15s,background-color .2s,opacity .2s}button:active{
     #card-preview-overlay.active { display: flex; }
     #card-preview-overlay .preview-card {
       width: min(49vw, 216px);
-      margin: 0 0 env(safe-area-inset-bottom, 0px) 0;
+      margin: 0;
       padding: 0;
       filter: drop-shadow(0 24px 48px rgba(0,0,0,0.8));
       animation: previewPop .22s ease-out;
       cursor: pointer;
       touch-action: manipulation;
-      position: relative;
+      position: fixed;
+      bottom: 0;
+      left: 50%;
+      transform: translateX(-50%);
       z-index: 2;
-      align-self: center;
     }
     #card-preview-overlay .preview-card .pcard {
       width: 100% !important;
@@ -557,8 +559,8 @@ button{transition:transform .15s,background-color .2s,opacity .2s}button:active{
       box-shadow: 0 0 0 3px #e6bf68, 0 0 0 6px rgba(230,191,104,.22), 0 20px 40px rgba(0,0,0,.55) !important;
     }
     @keyframes previewPop {
-      from { transform: scale(0.6); opacity: 0.4; }
-      to   { transform: scale(1);   opacity: 1; }
+      from { transform: translateX(-50%) scale(0.6); opacity: 0.4; }
+      to   { transform: translateX(-50%) scale(1);   opacity: 1; }
     }
     #card-preview-overlay .preview-hint {
       position: absolute;
@@ -4424,6 +4426,70 @@ renderMyHand=function(){
 };
 
 
+/* ===== KARTENRÜCKEN: Standard-Bild (JPG) als Priorität, SVG als Fallback ===== */
+const CARD_BACK_IMAGE_BASE = 'karten/';
+const CARD_BACK_IMAGE_STEMS = {
+  kreuz:   'standardruecken',
+  jass:    'ruecken-jass',
+  alpen:   'ruecken-alpen',
+  nacht:   'ruecken-nacht',
+  rosette: 'ruecken-rosette'
+};
+const CARD_BACK_IMAGE_EXTENSIONS = ['jpg', 'jpeg', 'png', 'webp'];
+const CARD_BACK_IMAGE_CACHE = {};  // { kreuz: 'karten/standardruecken.jpg' | null, … }
+let   CARD_BACK_IMAGE_PROBE_STARTED = {};
+
+async function preloadCardBackImages() {
+  for (const kind of Object.keys(CARD_BACK_IMAGE_STEMS)) {
+    if (CARD_BACK_IMAGE_CACHE[kind] !== undefined) continue;
+    CARD_BACK_IMAGE_CACHE[kind] = null;
+    const stem = CARD_BACK_IMAGE_BASE + CARD_BACK_IMAGE_STEMS[kind];
+    for (const ext of CARD_BACK_IMAGE_EXTENSIONS) {
+      const url = `${stem}.${ext}`;
+      if (await imageExists(url)) {
+        CARD_BACK_IMAGE_CACHE[kind] = url;
+        break;
+      }
+    }
+  }
+  // Nach dem Preload: alle Kartenrücken neu zeichnen
+  try {
+    if (typeof applyUI === 'function') applyUI();
+    if (typeof renderAll === 'function') renderAll();
+    if (typeof renderLook === 'function'
+        && document.getElementById('look-sheet')
+        && !document.getElementById('look-sheet').classList.contains('hidden')) {
+      renderLook();
+    }
+  } catch (e) {}
+}
+
+function getCardBackImageURL(kind) {
+  if (CARD_BACK_IMAGE_CACHE[kind]) return CARD_BACK_IMAGE_CACHE[kind];
+  // Noch nicht probiert? Lazy-Probe starten und SVG-Fallback zeigen
+  if (!CARD_BACK_IMAGE_PROBE_STARTED[kind]) {
+    CARD_BACK_IMAGE_PROBE_STARTED[kind] = true;
+    const stem = CARD_BACK_IMAGE_BASE + (CARD_BACK_IMAGE_STEMS[kind] || 'standardruecken');
+    (async () => {
+      for (const ext of CARD_BACK_IMAGE_EXTENSIONS) {
+        const url = `${stem}.${ext}`;
+        if (await imageExists(url)) {
+          CARD_BACK_IMAGE_CACHE[kind] = url;
+          try { applyUI(); } catch (e) {}
+          try { renderAll(); } catch (e) {}
+          if (typeof renderLook === 'function'
+              && document.getElementById('look-sheet')
+              && !document.getElementById('look-sheet').classList.contains('hidden')) {
+            renderLook();
+          }
+          return;
+        }
+      }
+    })();
+  }
+  return null;
+}
+
 /* ===== KARTENRÜCKEN: Schweizerkreuz als neuer Standard ===== */
 function backArt(kind){
  if(kind==='kreuz') return `
@@ -4453,8 +4519,18 @@ const BACKS={
  nacht:['Nachtblau',()=>backArt('nacht'),'Sternbild und dunkles Blau'],
  rosette:['Bordeaux-Rosette',()=>backArt('rosette'),'Burgunderrot mit goldener Ornamentik']
 };
-function backMarkup(id){return `<svg viewBox="0 0 114 178" width="100%" height="100%" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">${BACKS[id][1]()}</svg>`;}
-const backURI=id=>`url("data:image/svg+xml;base64,${btoa(unescape(encodeURIComponent(backMarkup(id))))}")`;
+function backMarkup(id){
+  const imgUrl = getCardBackImageURL(id);
+  if (imgUrl) {
+    return `<img src="${imgUrl}" alt="" style="width:100%;height:100%;display:block;object-fit:cover;border-radius:6px;" />`;
+  }
+  return `<svg viewBox="0 0 114 178" width="100%" height="100%" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">${BACKS[id][1]()}</svg>`;
+}
+const backURI=id=>{
+  const imgUrl = getCardBackImageURL(id);
+  if (imgUrl) return `url("${imgUrl}")`;
+  return `url("data:image/svg+xml;base64,${btoa(unescape(encodeURIComponent(backMarkup(id))))}")`;
+};
 const BGS={
  filz:['Jass-Filz','radial-gradient(circle at 50% 30%,#1d6a38 0%,#06150c 100%)'],
  nacht:['Mitternacht','radial-gradient(circle at 50% 20%,#233256 0%,#05070d 100%)'],
@@ -4539,6 +4615,7 @@ window.addEventListener('DOMContentLoaded',applyUI);
         loadSavedProfiles();
         selectUser('Rita');
         preloadAllCardImages().catch(err => console.warn('Kartenbilder-Preload:', err));
+        preloadCardBackImages().catch(err => console.warn('Rückenbilder-Preload:', err));
       } catch(e) {
         console.error(e);
       }
